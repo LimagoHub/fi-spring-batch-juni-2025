@@ -8,11 +8,11 @@
 		<version>3.4.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>de.fi</groupId>
-	<artifactId>TaskDemo</artifactId>
+	<groupId>de.atruvia</groupId>
+	<artifactId>VerzweigungDemo</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>TaskDemo</name>
-	<description>TaskDemo</description>
+	<name>VerzweigungDemo</name>
+	<description>VerzweigungDemo</description>
 	<url/>
 	<licenses>
 		<license/>

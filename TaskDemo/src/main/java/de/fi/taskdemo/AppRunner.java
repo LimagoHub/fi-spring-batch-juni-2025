@@ -1,6 +1,6 @@
 package de.fi.taskdemo;
 
-import lombok.RequiredArgsConstructor;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.JobExecution;
 import org.springframework.batch.core.JobParametersBuilder;
@@ -25,7 +25,7 @@ public class AppRunner implements CommandLineRunner {
 
     @Override
     public void run(final String... args) throws Exception {
-        final int anzahlSteps = 10;
+        final int anzahlSteps = 11;
         //boolean b = false;
 
         System.out.println( "\nJoblauf mit Job-Parameter anzahlSteps=" + anzahlSteps + ":" );

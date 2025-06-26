@@ -5,12 +5,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.skip.SkipLimitExceededException;
 import org.springframework.batch.core.step.skip.SkipPolicy;
+import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
@@ -18,9 +21,11 @@ import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.FlatFileParseException;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
@@ -79,12 +84,31 @@ public class BatchConfig {
                 .build();
     }
     @Bean
-    public Job importUserJob(JobRepository jobRepository,JobCompletionNotificationListener listener, Step step1) {
+    public Job importUserJob(JobRepository jobRepository,JobCompletionNotificationListener listener, Step step1, Step clearTableStep) {
         return new JobBuilder("importUserJob", jobRepository)
                 .listener(listener)
-        .start(step1).build();
+
+                .start(clearTableStep)
+                .next(step1)
+                //.end()
+                .build();
     }
 
+    @Bean
+    public Step clearTableStep(JobRepository jobRepository,
+                               PlatformTransactionManager transactionManager, DataSource dataSource)
+    {
+        return new StepBuilder("clearTableStep", jobRepository).tasklet(new Tasklet() {
+
+            private final JdbcTemplate template = new JdbcTemplate(dataSource);
+            @Override
+            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+                template.update("DELETE FROM people");
+                return RepeatStatus.FINISHED;
+            }
+        },transactionManager).build();
+
+    }
     // private final JdbcTemplate template = new JdbcTemplate(dataSource);
     // template.update(sql - befehl)
     @Bean
