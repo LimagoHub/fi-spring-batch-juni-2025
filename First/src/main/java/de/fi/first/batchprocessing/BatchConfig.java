@@ -85,6 +85,8 @@ public class BatchConfig {
         .start(step1).build();
     }
 
+    // private final JdbcTemplate template = new JdbcTemplate(dataSource);
+    // template.update(sql - befehl)
     @Bean
     SkipPolicy createSkipPolicy() {
 
