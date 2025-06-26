@@ -31,6 +31,7 @@ public class AppRunner implements CommandLineRunner {
                 .addString(
                 ConditionalFlowJobConfiguration.OK_ODER_FEHLER, "Ok" ).toJobParameters() );
 
+        Thread.sleep( 5000 );
     }
 
 }
