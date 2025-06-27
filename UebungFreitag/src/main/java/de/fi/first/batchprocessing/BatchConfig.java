@@ -2,13 +2,16 @@ package de.fi.first.batchprocessing;
 
 
 import de.fi.first.entity.Person;
+import de.fi.first.repository.PersonenRepository;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepContribution;
 import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.StepBuilder;
 import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
 import org.springframework.batch.core.step.tasklet.Tasklet;
@@ -19,6 +22,7 @@ import org.springframework.batch.item.file.MultiResourceItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.builder.MultiResourceItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -72,30 +76,49 @@ public class BatchConfig {
 //        };
 //    }
 
-    // Dummy Writer
-    public ItemWriter<Person> writer() {
+//    // Dummy Writer
+//    public ItemWriter<Person> writer() {
+//        return items -> {
+//            for (Person p : items) {
+//                System.out.println("Schreibe: " + p);
+//            }
+//        };
+//    }
+
+    @Bean
+    public ItemWriter<Person> writer(PersonenRepository repository) {
         return items -> {
-            for (Person p : items) {
-                System.out.println("Schreibe: " + p);
-            }
+            repository.saveAll(items);
         };
     }
 
     @Bean
     public Step chunkStep(JobRepository jobRepository,
                       PlatformTransactionManager transactionManager,
-                      MultiResourceItemReader<Person> multiResourceReader, MyCompositeProcessor processor) {
+                      MultiResourceItemReader<Person> multiResourceReader, MyCompositeProcessor processor, ItemWriter writer) {
         return new StepBuilder("chunkStep", jobRepository)
                 .<Person, Person>chunk(10, transactionManager)
                 .reader(multiResourceReader)
-
+                //.listener(processor)
                 .processor(processor)
-                .writer(writer())
+                .writer(writer)
                 .build();
     }
 
     @Bean
+    public Step ausgabeStep() {
 
+        return new StepBuilder("ausgabeStep", repository).tasklet(new Tasklet() {
+            @Override
+            public RepeatStatus execute(final StepContribution contribution, final ChunkContext chunkContext) throws Exception {
+                var sumBalance = chunkContext.getStepContext().getStepExecution().getJobExecution().getExecutionContext().getDouble("SumBalance",0);
+                System.out.println("Balance : " + sumBalance);
+                return RepeatStatus.FINISHED;
+            }
+        }, transactionManager).build();
+    }
+
+    @Bean
     public Step moveFileStep(Tasklet task1) {
 
         return new StepBuilder("moveFileStep", repository).tasklet( task1, transactionManager ).build();
@@ -115,13 +138,14 @@ public class BatchConfig {
     }
 
     @Bean
-    public Job meinTaskletJob(Step moveFileStep, Step chunkStep) throws Exception
+    public Job meinTaskletJob(Step moveFileStep, Step chunkStep, Step ausgabeStep) throws Exception
     {
 
 
         return new JobBuilder("meinTaskJob", repository).incrementer( new RunIdIncrementer() )
                 .start( moveFileStep )
                 .next( chunkStep )
+                .next(ausgabeStep)
                 .build();
     }
 

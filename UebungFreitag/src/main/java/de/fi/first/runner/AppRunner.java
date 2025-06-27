@@ -26,7 +26,10 @@ public class AppRunner implements CommandLineRunner {
     @Override
     public void run(final String... args) throws Exception {
         System.out.println( "\nMove Dateien..." );
-        JobExecution je = jobLauncher.run( job, new JobParametersBuilder().addString("UUID", UUID.randomUUID().toString()).toJobParameters() );
+        JobExecution je = jobLauncher.run( job, new JobParametersBuilder()
+                .addString("UUID", UUID.randomUUID().toString())
+                .addString("country", "Russia")
+                .toJobParameters() );
         System.out.println( je.getStatus());
     }
 }

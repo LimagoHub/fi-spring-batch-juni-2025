@@ -1,9 +1,16 @@
 package de.fi.first.entity;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import java.util.Objects;
 
+@Entity
+@Table(name="bloeder_name")
 public class Person {
 
+    @Id
     private Integer id=null;
     private String firstname=null;
     private String lastname=null;
