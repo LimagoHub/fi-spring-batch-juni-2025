@@ -27,7 +27,7 @@ public class AppRunner implements CommandLineRunner {
     public void run(final String... args) throws Exception {
         JobExecution jobExecution = jobLauncher.run(job, new JobParametersBuilder()
                 .addString("UUID", UUID.randomUUID().toString())
-                .addString("filename", "sample-data.csv")
+
                 .toJobParameters());
         System.out.println(jobExecution.getStatus());
     }

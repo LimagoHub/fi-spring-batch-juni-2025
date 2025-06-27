@@ -1,0 +1,12 @@
+ Datentr„ger in Laufwerk C: ist OS
+ Volumeseriennummer: 62A7-9121
+
+ Verzeichnis von C:\Users\JoachimWagner\Documents\git\FinanzInformatik\fi-spring-batch-juni-2025\VerzweigungDemo\src\main\resources
+
+26.06.2025  16:19    <DIR>          .
+26.06.2025  13:54    <DIR>          ..
+06.03.2025  15:36               346 application-h2.properties
+04.12.2024  14:29               327 application.properties
+26.06.2025  16:28                 0 ausgabe.txt
+               3 Datei(en),            673 Bytes
+               2 Verzeichnis(se), 514.497.519.616 Bytes frei

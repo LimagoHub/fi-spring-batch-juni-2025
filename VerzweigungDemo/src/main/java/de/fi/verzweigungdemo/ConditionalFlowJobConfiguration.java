@@ -13,6 +13,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.scope.context.StepContext;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.SystemCommandTasklet;
 import org.springframework.batch.core.step.tasklet.Tasklet;
 import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.context.annotation.Bean;
@@ -199,11 +200,11 @@ public Job exampleJob(JobBuilderFactory jobBuilders, StepBuilderFactory stepBuil
     }
 */
     @Bean
-    public Flow flow1(Step worker1, Step worker2, Step worker3) {
+    public Flow flow1(Step worker1, Step worker2) {
         return new FlowBuilder<SimpleFlow>("flow1")
                 .start(worker1)
                 .next(worker2)
-                .next(worker3)
+
                 .build();
     }
     @Bean
@@ -214,14 +215,23 @@ public Job exampleJob(JobBuilderFactory jobBuilders, StepBuilderFactory stepBuil
                 .build();
     }
 
+    @Bean
+    public Flow flow3(Step worker3) {
+        return new FlowBuilder<SimpleFlow>("flow3")
+                .start(worker3)
+
+                .build();
+    }
+
 
     @Bean
-    public Flow splitFlow(Flow flow1, Flow flow2) {
+    public Flow splitFlow(Flow flow1, Flow flow2,  Flow flow3) {
         return new FlowBuilder<SimpleFlow>("splitFlow")
 
                 .start(flow1)
                 .split(new SimpleAsyncTaskExecutor())
-                .add(flow2)
+                .add(flow2, flow3)
+
                 .build();
     }
 
@@ -232,9 +242,36 @@ public Job exampleJob(JobBuilderFactory jobBuilders, StepBuilderFactory stepBuil
 
                 //.flow( okStep() )
                 //.start( okFlow)
-                .flow(okStep())
+                .flow(runWslCommandStep())
                 .next(splitFlow)
                 .next( abschliessenderStep() )
                 .end().build();
     }
+
+    @Bean
+    public Step runWslCommandStep() {
+
+        return new StepBuilder("runWslCommandStep", repository).tasklet(wslCommandTasklet(),transactionManager).build();
+
+
+    }
+
+
+    public SystemCommandTasklet wslCommandTasklet() {
+        SystemCommandTasklet tasklet = new SystemCommandTasklet();
+
+        // Beispiel: ls über WSL
+        tasklet.setCommand("C:/Windows/System32/cmd.exe", "/c","dir >ausgabe.txt");
+        //tasklet.setCommand("C:/Windows/System32/wsl.exe");
+        // Optional: Arbeitsverzeichnis
+        tasklet.setWorkingDirectory("C:\\Users\\JoachimWagner\\Documents\\git\\FinanzInformatik\\fi-spring-batch-juni-2025\\VerzweigungDemo\\src\\main\\resources"); // Muss existieren
+
+        // Zeitlimits und Fehlerbehandlung
+        tasklet.setTimeout(50000);
+        //tasklet.setInterruptOnCancel(true);
+        //tasklet.setTerminationCheckInterval(500);
+
+        return tasklet;
+    }
 }
+
